@@ -1,4 +1,4 @@
-Statistical analysis of Canadian Vowel Shift Analysis
+Analysis of pitch/intensity politeness perception studies
 =============
 
 -	**Principal investigator:**  Kaori Idemaru
