@@ -92,8 +92,56 @@ summary(loud.linr <- glmer(Resp ~ IntNum_c +
 anova(loud.linr, loud.mdl, test = 'Chisq')
 
 ## Construct full model with linear effect and no quadratic random effects:
+## Add loudness/gender interactions:
 
 summary(loud.lin <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	IntNum_c:ListenerSex01 + IntNum_c:SpeakerSex01 +
+	IntNum_c:ListenerSex01:SpeakerSex01 +
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Listener) + (0+IntNum_c|Speaker),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Get rid of three-way interaction:
+
+summary(loud.nothreeway <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	IntNum_c:ListenerSex01 + IntNum_c:SpeakerSex01 +
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Listener) + (0+IntNum_c|Speaker),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Model without intensity/listener-sex interaction:
+
+summary(loud.nolistenerint <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	1 + IntNum_c:SpeakerSex01 +
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Listener) + (0+IntNum_c|Speaker),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Model without intensity/speaker-sex interaction:
+
+summary(loud.nospeakerint <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	IntNum_c:ListenerSex01 + 1 +
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Listener) + (0+IntNum_c|Speaker),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Test intensity/sex interactions:
+
+anova(loud.nospeakerint, loud.nothreeway, test = 'Chisq')
+anova(loud.nolistenerint, loud.nothreeway, test = 'Chisq')
+anova(loud.nothreeway, loud.lin, test = 'Chisq')
+
+## Model without intensity interactions:
+
+summary(loud.nogenderint <- glmer(Resp ~ IntNum_c + 
 	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
 	(1|Listener) + (1|Speaker) + (1|Item) +
 	(0+IntNum_c|Listener) + (0+IntNum_c|Speaker),
@@ -138,10 +186,33 @@ loud.nospeaker <- glmer(Resp ~ IntNum_c +
 
 ## Likelihood ratio tests:
 
-anova(loud.noIntensity, loud.mdl, test = 'Chisq')
-anova(loud.noint, loud.mdl, test = 'Chisq')			# speaker/listener interaction
+anova(loud.noIntensity, loud.nogenderint, test = 'Chisq')
+anova(loud.noint, loud.nogenderint, test = 'Chisq')			# speaker/listener interaction
 anova(loud.nospeaker, loud.noint, test = 'Chisq')
 anova(loud.nolistener, loud.noint, test = 'Chisq')
+
+## Significance of random effects, no speaker slopes:
+
+summary(loud.nospeakerslope <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Listener),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Significance of random effects, no listener slopes:
+
+summary(loud.nolistenerslope <- glmer(Resp ~ IntNum_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+IntNum_c|Speaker),
+	data = loud, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Test this:
+
+anova(loud.nolistenerslope, loud.nogenderint)
+anova(loud.nospeakerslope, loud.nogenderint)
 
 
 
@@ -174,13 +245,65 @@ summary(f0.linr <- glmer(Resp ~ F0Num_c +
 anova(f0.linr, f0.mdl, test = 'Chisq')	# n.s., drop quadratic effects
 
 ## New pitch model without quadratic random effects:
+## Also, add f0 interaction effects for a potential gender interaction of the manipulation:
 
 summary(f0.lin <- glmer(Resp ~ F0Num_c + 
-	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	ListenerSex01 + SpeakerSex01 +
+	ListenerSex01:SpeakerSex01 + 
+	ListenerSex01:F0Num_c + SpeakerSex01:F0Num_c +
+	ListenerSex01:SpeakerSex01:F0Num_c +
 	(1|Listener) + (1|Speaker) + (1|Item) +
 	(0+F0Num_c|Listener) + (0+F0Num_c|Speaker),
 	data = f0, family = 'binomial',
 	control = glmerControl(optimizer = 'bobyqa')))
+
+## Model without the three-way interaction:
+
+summary(f0.lin.pitchnothreeway <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 + 
+	ListenerSex01:SpeakerSex01 + 
+	ListenerSex01:F0Num_c + SpeakerSex01:F0Num_c + 	
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Listener) + (0+F0Num_c|Speaker),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Model without speaker-sex/pitch interaction:
+
+summary(f0.lin.nospeakersexint <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 + 
+	ListenerSex01:SpeakerSex01 + 
+	ListenerSex01:F0Num_c + 1 + 	
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Listener) + (0+F0Num_c|Speaker),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Model without listener-sex/pitch interaction:
+
+summary(f0.lin.nolistenersexint <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 +
+	ListenerSex01:SpeakerSex01 + 
+	1 + SpeakerSex01:F0Num_c + 	
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Listener) + (0+F0Num_c|Speaker),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Test for pitch condition / gender interactions:
+
+anova(f0.lin.nospeakersexint, f0.lin.pitchnothreeway, test = 'Chisq')
+anova(f0.lin.nolistenersexint, f0.lin.pitchnothreeway, test = 'Chisq')
+anova(f0.lin.pitchnothreeway, f0.lin, test = 'Chisq')	# p = 0.079
+
+## Model without any condition / gender interactions:
+
+f0.nogenderint <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Listener) + (0+F0Num_c|Speaker),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa'))
 
 ## Model for pitch effect:
 
@@ -220,10 +343,41 @@ f0.nospeaker <- glmer(Resp ~ F0Num_c +
 
 ## Likelihood ratio tests:
 
-anova(f0.nopitch, f0.lin, test = 'Chisq')
-anova(f0.noint, f0.lin, test = 'Chisq')			# speaker/listener interaction
-anova(f0.nospeaker, f0.noint, test = 'Chisq')
+anova(f0.nopitch, f0.nogenderint, test = 'Chisq')
+anova(f0.noint, f0.nogenderint, test = 'Chisq')			# speaker/listener interaction
+anova(f0.nospeaker, f0.noint, test = 'Chisq')		# speaker gender effect
 anova(f0.nolistener, f0.noint, test = 'Chisq')
+
+
+## Significance of random effects, no speaker slopes:
+
+summary(f0.nospeakerslope <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Listener),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Significance of random effects, no listener slopes:
+
+summary(f0.nolistenerslope <- glmer(Resp ~ F0Num_c + 
+	ListenerSex01 + SpeakerSex01 + ListenerSex01:SpeakerSex01 + 
+	(1|Listener) + (1|Speaker) + (1|Item) +
+	(0+F0Num_c|Speaker),
+	data = f0, family = 'binomial',
+	control = glmerControl(optimizer = 'bobyqa')))
+
+## Test this:
+
+anova(f0.nolistenerslope, f0.nogenderint)
+anova(f0.nospeakerslope, f0.nogenderint)
+
+
+slopes <- coef(f0.nogenderint)$Listener$F0Num_c
+subjs <- data.frame(slopes, Age = f0[match(1:24, f0$Listener),]$Age)
+subjs$PitchDirection <- ifelse(slopes < 0, -1, 1)
+aggregate(Age ~ PitchDirection, subjs, mean)
+
 
 
 
@@ -344,10 +498,10 @@ box(lwd = 2)
 
 pitch.pred <- data.frame(F0Num_c = c(-2, -1, 0, 1, 2),
 	ListenerSex01 = 0, SpeakerSex01 = 0, Resp = 0)
-mm <- model.matrix(terms(f0.lin), pitch.pred)
-pitch.pred$Resp <- predict(f0.lin,
+mm <- model.matrix(terms(f0.lin.pitchnothreeway), pitch.pred)
+pitch.pred$Resp <- predict(f0.lin.pitchnothreeway,
 	newdata = pitch.pred, re.form = NA)
-pvar1 <- diag(mm %*% tcrossprod(vcov(f0.lin), mm))
+pvar1 <- diag(mm %*% tcrossprod(vcov(f0.lin.pitchnothreeway), mm))
 pitch.pred$UB <- pitch.pred$Resp + 1.96 * sqrt(pvar1)
 pitch.pred$LB <- pitch.pred$Resp - 1.96 * sqrt(pvar1)
 pitch.pred <- mutate(pitch.pred,
@@ -355,20 +509,20 @@ pitch.pred <- mutate(pitch.pred,
 
 ## Create dataframe for getting predictions of gender interaction effect:
 
-gender.pred <- data.frame(F0Num_c = 0,
+gender.f0.pred <- data.frame(F0Num_c = 0,
 	ListenerSex01 = c(-0.5, -0.5, 0.5, 0.5),
 	SpeakerSex01 = c(-0.5, 0.5, -0.5, 0.5),
 	Resp = 0)
 
 ## Same spiel, extract predictions:
 
-mm <- model.matrix(terms(f0.lin), gender.pred)
-gender.pred$Resp <- predict(f0.lin,
+mm <- model.matrix(terms(f0.lin.pitchnothreeway), gender.f0.pred)
+gender.f0.pred$Resp <- predict(f0.lin.pitchnothreeway,
 	newdata = gender.pred, re.form = NA)
-pvar1 <- diag(mm %*% tcrossprod(vcov(f0.lin), mm))
-gender.pred$UB <- gender.pred$Resp + 1.96 * sqrt(pvar1)
-gender.pred$LB <- gender.pred$Resp - 1.96 * sqrt(pvar1)
-gender.pred <- mutate(gender.pred,
+pvar1 <- diag(mm %*% tcrossprod(vcov(f0.lin.pitchnothreeway), mm))
+gender.f0.pred$UB <- gender.f0.pred$Resp + 1.96 * sqrt(pvar1)
+gender.f0.pred$LB <- gender.f0.pred$Resp - 1.96 * sqrt(pvar1)
+gender.f0.pred <- mutate(gender.f0.pred,
 	Resp = plogis(Resp), UB = plogis(UB), LB = plogis(LB))
 
 ## Plot this:
@@ -410,21 +564,21 @@ legend('topright', pch = 16:17, lty = 1:2, lwd = 2,
 	legend = c('female speakers', 'male speakers'))
 text(x = 0.1, y = 0.77, labels = '(b)', font = 2, cex = 1.5)
 # Actual data:
-points(x = c(1, 3) - xfactor, y = gender.pred[c(1, 3),]$Resp, type = 'b',
+points(x = c(1, 3) - xfactor, y = gender.f0.pred[c(1, 3),]$Resp, type = 'b',
 	pch = 16, cex = 1.5,
 	lwd = 2)
-points(x = c(1, 3) + xfactor, y = gender.pred[c(2, 4),]$Resp, type = 'b',
+points(x = c(1, 3) + xfactor, y = gender.f0.pred[c(2, 4),]$Resp, type = 'b',
 	pch = 17, cex = 1.5,
 	lwd = 2, lty = 2)
 arrows(x0 = c(1, 3) - xfactor,
 	x1 = c(1,3 ) - xfactor,
-	y0 = gender.pred[c(1, 3),]$LB,
-	y1 = gender.pred[c(1, 3),]$UB,
+	y0 = gender.f0.pred[c(1, 3),]$LB,
+	y1 = gender.f0.pred[c(1, 3),]$UB,
 	code = 3, angle = 90, length = 0.1, lwd = 2)
 arrows(x0 = c(1, 3) + xfactor,
 	x1 = c(1,3 ) + xfactor,
-	y0 = gender.pred[c(2, 4),]$LB,
-	y1 = gender.pred[c(2, 4),]$UB,
+	y0 = gender.f0.pred[c(2, 4),]$LB,
+	y1 = gender.f0.pred[c(2, 4),]$UB,
 	code = 3, angle = 90, length = 0.1, lwd = 2)
 box(lwd = 2)
 
@@ -534,3 +688,8 @@ summary(f0.raw.nopitch <- glmer(Resp ~ 1 +
 ## Test effects:
 
 anova(f0.raw.nopitch, f0.raw.nopitchints, test = 'Chisq')
+anova(f0.raw.nolistenerint, f0.raw.nothree, test = 'Chisq')
+anova(f0.raw.nospeakerint, f0.raw.nothree, test = 'Chisq')
+anova(f0.raw.nothree, f0.raw.lin, test = 'Chisq')		# p = 0.0046
+
+
